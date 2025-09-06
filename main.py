@@ -72,7 +72,7 @@ async def editais(ctx):
         message += "\n\nHá alguns editais em aberto neste momento! Aqui vai a busca de nossa última atualização."
 
         for item in editais:
-            message += f"\n\n**Intercâmbio:** {item.get("name")}\n**Link:** {item.get("link")}."
+            message += f"\n\n**Intercâmbio:** {item.get('name')}\n**Link:** {item.get('link')}."
         else:
             message += "\n\nCaso queira acessar o portal diretamente, segue a **lista de editais:** https://inatel.br/intercambios/editais/lista-editais"
     else:
@@ -138,7 +138,7 @@ def job():
             code = result.get("code")
 
             if code == 1:
-                message = f"*Olá, senhor! Espero que esteja bem.*\n\nUm novo edital de intercâmbio foi aberto a menos de 24 horas!\n\n**Intercâmbio:** {result.get("data")[0].get("name")}\n**Link:** {result.get("data")[0].get("link")}.\n\n**Lista de editais:** https://inatel.br/intercambios/editais/lista-editais"
+                message = f"*Olá, senhor! Espero que esteja bem.*\n\nUm novo edital de intercâmbio foi aberto a menos de 24 horas!\n\n**Intercâmbio:** {result.get('data')[0].get('name')}\n**Link:** {result.get('data')[0].get('link')}.\n\n**Lista de editais:** https://inatel.br/intercambios/editais/lista-editais"
                 for uid in usuarios:
                     bot.loop.create_task(enviar_msg(uid, message))
             
