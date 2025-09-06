@@ -1,0 +1,6 @@
+BeautifulSoup4
+discord
+cfscrape
+urllib3==1.26.15
+dotenv
+schedule
