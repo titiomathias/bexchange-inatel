@@ -2,6 +2,7 @@ import json
 import cfscrape
 from bs4 import BeautifulSoup
 from utils.verifier import verify
+from datetime import datetime
 
 url = "https://inatel.br/intercambios/editais/lista-editais"
 
@@ -37,12 +38,15 @@ def request_site():
         try:
             code = verify(data)
 
-            print(code)
-
             if code == 1:
-                return {"code": 1, "data": data, "status": response.status_code}
+                return {
+                    "code": 1,
+                    "data": data,
+                    "last_check": datetime.now().isoformat(timespec="seconds"),
+                    "status": response.status_code
+                }
             else:
-                return {"code": 0}
+                return {"code": 0, "last_check": datetime.now().isoformat(timespec="seconds")}
         except Exception as e:
             print("Ocorreu um erro ao verificar o json", e)
             return {"code": -1, "error": True} 

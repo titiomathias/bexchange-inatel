@@ -35,7 +35,8 @@ async def ajuda(ctx, destino: str = None):
     +ajuda privado       -> idem 'dm'
     """
     comandos = [
-        ("editais", "Busca e lista os editais/bolsas/intercâmbios encontrados."),
+        ("editais", "Busca e lista os editais/bolsas/intercâmbios encontrados na base de dados."),
+        ("pesquisar", "Realiza uma nova busca diretamente no site do Inatel e lista os editais/bolsas/intercâmbios encontrados."),
         ("inscrever", "Inscreve você para receber notificações sobre novos editais de intercâmbios."),
         ("desinscrever", "Cancela sua inscrição para notificações sobre novos editais de intercâmbios."),
         ("ajuda", "Mostra essa mensagem de ajuda. Use `+ajuda dm` para receber por DM."),
@@ -63,15 +64,20 @@ async def ajuda(ctx, destino: str = None):
 
 
 @bot.command("editais", aliases=["edital", "intercambios"])
-async def editais(ctx):
+async def editais(ctx, msg:str = None):
     editais = listAll()
 
-    message = "**Olá senhor!**"
+    if msg == None:
+        message = "**Olá senhor!**"
+    else:
+        message = msg
 
-    if len(editais) > 0:
+    if len(editais.get("data")) > 0:
         message += "\n\nHá alguns editais em aberto neste momento! Aqui vai a busca de nossa última atualização."
 
-        for item in editais:
+        message += f"\n\n*Última atualização:* {editais.get('last_check')}"
+
+        for item in editais.get("data"):
             message += f"\n\n**Intercâmbio:** {item.get('name')}\n**Link:** {item.get('link')}."
         else:
             message += "\n\nCaso queira acessar o portal diretamente, segue a **lista de editais:** https://inatel.br/intercambios/editais/lista-editais"
@@ -79,6 +85,14 @@ async def editais(ctx):
         message = "\n\nNão há editais abertos no momento!"
     
     await ctx.send(message)
+
+
+@bot.command("procurar-editais", aliases=["procurar", "pesquisa"])
+async def procurar_editais(ctx):
+    job()
+
+    await editais(ctx, "**Olá senhor! Foi realizada uma nova pesquisa de editais.**")
+
 
 @bot.command("inscricao", aliases=["inscrever", "inscrição"])
 async def subscribe(ctx):
@@ -127,7 +141,7 @@ async def enviar_msg(user_id: int, msg: str):
 
 
 def run_schedule():
-    schedule.every().day.at("12:00").do(job)
+    schedule.every().day.at("12:07").do(job)
     while True:
         schedule.run_pending()
         time.sleep(1)
@@ -141,17 +155,31 @@ def job():
             code = result.get("code")
 
             if code == 1:
-                message = f"*Olá, senhor! Espero que esteja bem.*\n\nUm novo edital de intercâmbio foi aberto a menos de 24 horas!\n\n**Intercâmbio:** {result.get('data')[0].get('name')}\n**Link:** {result.get('data')[0].get('link')}.\n\n**Lista de editais:** https://inatel.br/intercambios/editais/lista-editais"
+                edital = result["data"][0]
+                message = (
+                    f"*Olá, senhor! Espero que esteja bem.*\n\n"
+                    f"Um novo edital de intercâmbio foi aberto a menos de 24 horas!\n\n"
+                    f"**Intercâmbio:** {edital['name']}\n"
+                    f"**Link:** {edital['link']}.\n\n"
+                    f"**Lista de editais:** https://inatel.br/intercambios/editais/lista-editais\n\n"
+                    f"_(Última verificação: {result.get('last_check')})_\n\n"
+                    f"*Para conferir a lista completa de editais, não se esqueça de utilizar o comando *"
+                )
+
                 for uid in usuarios:
                     bot.loop.create_task(enviar_msg(uid, message))
             
             elif code == 0:
-                print("Tudo igual")
-            
+                print(f"Nenhum edital novo — última verificação em {result.get('last_check')}")
+
             elif code == -1:
-                bot.loop.create_task(enviar_msg(usuarios[0], "Ocorreu um erro na execução!"))
+                bot.loop.create_task(
+                    enviar_msg(usuarios[0], "Ocorreu um erro na execução!")
+                )
+
     except Exception as e:
         print(f"Erro no job: {e}")
+
 
 
 threading.Thread(target=run_schedule, daemon=True).start()
