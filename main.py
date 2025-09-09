@@ -80,7 +80,6 @@ async def editais(ctx):
     
     await ctx.send(message)
 
-
 @bot.command("inscricao", aliases=["inscrever", "inscrição"])
 async def subscribe(ctx):
     message = "**Você acabou de ser inscrito e será notificado sobre os novos editais assim que abrirem!**"
@@ -91,7 +90,9 @@ async def subscribe(ctx):
         inscriptions = json.load(file)
         if user not in inscriptions or inscriptions[user] == 0:
             inscriptions[user] = 1
+            file.seek(0)
             json.dump(inscriptions, file, ensure_ascii=False, indent=4)
+            file.truncate()
         else:
             message = "**Você já está inscrito e já recebe notificações sobre novos editais!**"
         
@@ -106,9 +107,11 @@ async def unsubscribe(ctx):
 
     with open("users/users.json", "r+", encoding="utf-8") as file:
         inscriptions = json.load(file)
-        if inscriptions[user] == 1:
+        if user in inscriptions and inscriptions[user] == 1:
             inscriptions[user] = 0
+            file.seek(0)
             json.dump(inscriptions, file, ensure_ascii=False, indent=4)
+            file.truncate()
         else:
             message = "**Você não está inscrito e não recebe notificações sobre novos editais!**"
         
